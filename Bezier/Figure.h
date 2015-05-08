@@ -157,7 +157,7 @@ void onKeyPress(unsigned char key, int x, int y)
 		pas++;
 	if (key == '-' && pas > 1)
 		pas--;
-	if (key == 'x' && (*currentCurve).size > 0) // C0
+	if (key == 'x' && (*currentCurve).size() > 0) // C0
 	{
 		std::unique_ptr<std::vector<Point>> tmp = std::unique_ptr<std::vector<Point>>(new std::vector<Point>);
 		Point p = (*currentCurve).back();
@@ -165,7 +165,7 @@ void onKeyPress(unsigned char key, int x, int y)
 		curves.push_back(std::move(currentCurve));
 		currentCurve = std::move(tmp);
 	}
-	if (key == 'c' && (*currentCurve).size > 1) // C1
+	if (key == 'c' && (*currentCurve).size() > 1) // C1
 	{
 		std::unique_ptr<std::vector<Point>> tmp = std::unique_ptr<std::vector<Point>>(new std::vector<Point>);
 		Point p = (*currentCurve).back();
@@ -175,7 +175,7 @@ void onKeyPress(unsigned char key, int x, int y)
 		curves.push_back(std::move(currentCurve));
 		currentCurve = std::move(tmp);
 	}
-	if (key == 'v' && (*currentCurve).size > 2) // C2
+	if (key == 'v' && (*currentCurve).size() > 2) // C2
 	{
 		std::unique_ptr<std::vector<Point>> tmp = std::unique_ptr<std::vector<Point>>(new std::vector<Point>);
 		Point p = (*currentCurve).back();
@@ -189,6 +189,42 @@ void onKeyPress(unsigned char key, int x, int y)
 		curves.push_back(std::move(currentCurve));
 		currentCurve = std::move(tmp);
 	}
+	if (key == 'd' && (*currentCurve).size() > 1) // C1
+	{
+		std::unique_ptr<std::vector<Point>> tmp = std::unique_ptr<std::vector<Point>>(new std::vector<Point>);
+		Point p = (*currentCurve).back();
+		Point p2 = (*currentCurve).at((*currentCurve).size() - 2);
+		float distPoint = sqrt((p.x - p2.x)*(p.x - p2.x) + (p.y - p2.y)*(p.y - p2.y));
+		float distMouse = sqrt((p.x - x)*(p.x - x) + (p.y - y)*(p.y - y));
+		float coeff = distMouse / distPoint;
+		(*tmp).push_back(Point(p.x, p.y));
+		(*tmp).push_back(Point(p.x + coeff*(p.x - p2.x), p.y + coeff*(p.y - p2.y)));
+		curves.push_back(std::move(currentCurve));
+		currentCurve = std::move(tmp);
+		std::cout << coeff << std::endl;
+	}
+	if (key == 'f' && (*currentCurve).size() > 2) // C2
+	{
+		std::unique_ptr<std::vector<Point>> tmp = std::unique_ptr<std::vector<Point>>(new std::vector<Point>);
+		Point p = (*currentCurve).back();
+		Point p2 = (*currentCurve).at((*currentCurve).size() - 2);
+		Point p3 = (*currentCurve).at((*currentCurve).size() - 3);
+		float distPoint = sqrt((p.x - p2.x)*(p.x - p2.x) + (p.y - p2.y)*(p.y - p2.y));
+		float distMouse = sqrt((p.x - x)*(p.x - x) + (p.y - y)*(p.y - y));
+		float coeff = distMouse / distPoint;
+		Point temp = Point(p2.x + coeff*(p2.x - p3.x), p2.y + coeff*(p2.y - p3.y));
+		Point newP = Point(p.x + coeff*(p.x - p2.x), p.y + coeff*(p.y - p2.y));
+		(*tmp).push_back(Point(p.x, p.y));
+		(*tmp).push_back(Point(newP.x, newP.y));
+		(*tmp).push_back(Point(newP.x + coeff*(newP.x - temp.x), newP.y + coeff*(newP.y - temp.y)));
+		curves.push_back(std::move(currentCurve));
+		currentCurve = std::move(tmp);
+		std::cout << coeff << std::endl;
+	}
+	if (key == 'r' && (*currentCurve).size() > 0) // C0
+	{
+		(*currentCurve).pop_back();
+	}
 	renderDeCasteljau();
 }
 
@@ -199,9 +235,9 @@ int main(int argc, char* argv[])
 {
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_RGBA | GLUT_SINGLE);
-	glutInitWindowSize(800, 600);
+	glutInitWindowSize(1600, 900);
 	glutCreateWindow("Window");
-	glOrtho(0.0, 800.0, 600.0, 0.0, 0.0, 1.0);
+	glOrtho(0.0, glutGet(GLUT_WINDOW_WIDTH), glutGet(GLUT_WINDOW_HEIGHT), 0.0, 0.0, 1.0);
 #ifdef FREEGLUT
 	// Note: glutSetOption n'est disponible qu'avec freeGLUT
 	glutSetOption(GLUT_ACTION_ON_WINDOW_CLOSE,
