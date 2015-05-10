@@ -22,7 +22,9 @@
 double x, y;
 std::unique_ptr<std::vector<Point>> currentCurve;
 std::vector<std::unique_ptr<std::vector<Point>>> curves;
-int pas = 50;
+int step= 50;
+int mouseX = 0;
+int mouseY = 0;
 float current_control_r, current_control_g, current_control_b, control_r, control_g, control_b, curve_r, curve_g, curve_b, current_curve_r, current_curve_g, current_curve_b;
 void getCasteljauPoint(int r, int i, double t, double* x, double* y, std::vector<Point>& points) {
 
@@ -73,7 +75,7 @@ void deCateljau()
 		if (psize > 0)
 		{
 			glBegin(GL_LINE_STRIP);
-			for (double t = 0; t <= 1; t += (1.0/pas))
+			for (double t = 0; t <= 1; t += (1.0/step))
 			{
 				getCasteljauPointIter(psize, 0, t, (*points));
 			}
@@ -86,7 +88,7 @@ void deCateljau()
 	if (psize > 0)
 	{
 		glBegin(GL_LINE_STRIP);
-		for (double t = 0; t <= 1; t += (1.0 / pas))
+		for (double t = 0; t <= 1; t += (1.0 / step))
 		{
 			getCasteljauPointIter(psize, 0, t, (*currentCurve));
 		}
@@ -124,6 +126,16 @@ void renderDeCasteljau()
 	glFlush();
 }
 
+void clearWindow()
+{
+	curves.clear();
+	currentCurve = std::unique_ptr<std::vector<Point>>(new std::vector<Point>);
+	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+	glClear(GL_COLOR_BUFFER_BIT);
+	glutPostRedisplay();
+	glFlush();
+}
+
 void onClick(int button, int state, int x, int y)
 {
 	if (state)
@@ -135,101 +147,364 @@ void onClick(int button, int state, int x, int y)
 		}
 		else if (button == 1)
 		{
-			curves.clear();
-			currentCurve = std::unique_ptr<std::vector<Point>>(new std::vector<Point>);
-			glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-			glClear(GL_COLOR_BUFFER_BIT);
-			glutPostRedisplay();
-			glFlush();
+			clearWindow();
 		}
-		if (button == 2)
+		else if (button == 2)
 		{
-			curves.push_back(std::move(currentCurve));
-			currentCurve = std::unique_ptr<std::vector<Point>>(new std::vector<Point>);
-			renderDeCasteljau();
+			mouseX = x;
+			mouseY = y;
+			std::cout << mouseX << std::endl;
+			std::cout << mouseY << std::endl;
 		}
 	}
 }
 
-void onKeyPress(unsigned char key, int x, int y)
+void lowerSteps()
 {
-	if (key == '+')
-		pas++;
-	if (key == '-' && pas > 1)
-		pas--;
-	if (key == 'x' && (*currentCurve).size() > 0) // C0
-	{
-		std::unique_ptr<std::vector<Point>> tmp = std::unique_ptr<std::vector<Point>>(new std::vector<Point>);
-		Point p = (*currentCurve).back();
-		(*tmp).push_back(Point(p.x, p.y));
-		curves.push_back(std::move(currentCurve));
-		currentCurve = std::move(tmp);
-	}
-	if (key == 'c' && (*currentCurve).size() > 1) // C1
-	{
-		std::unique_ptr<std::vector<Point>> tmp = std::unique_ptr<std::vector<Point>>(new std::vector<Point>);
-		Point p = (*currentCurve).back();
-		Point p2 = (*currentCurve).at((*currentCurve).size() - 2);
-		(*tmp).push_back(Point(p.x, p.y));
-		(*tmp).push_back(Point(p.x + (p.x - p2.x), p.y + (p.y - p2.y)));
-		curves.push_back(std::move(currentCurve));
-		currentCurve = std::move(tmp);
-	}
-	if (key == 'v' && (*currentCurve).size() > 2) // C2
-	{
-		std::unique_ptr<std::vector<Point>> tmp = std::unique_ptr<std::vector<Point>>(new std::vector<Point>);
-		Point p = (*currentCurve).back();
-		Point p2 = (*currentCurve).at((*currentCurve).size() - 2);
-		Point p3 = (*currentCurve).at((*currentCurve).size() - 3);
-		Point temp = Point(p2.x + (p2.x - p3.x), p2.y + (p2.y - p3.y));
-		Point newP = Point(p.x + (p.x - p2.x), p.y + (p.y - p2.y));
-		(*tmp).push_back(Point(p.x, p.y));
-		(*tmp).push_back(Point(newP.x, newP.y));
-		(*tmp).push_back(Point(newP.x + (newP.x - temp.x), newP.y + (newP.y - temp.y)));
-		curves.push_back(std::move(currentCurve));
-		currentCurve = std::move(tmp);
-	}
-	if (key == 'd' && (*currentCurve).size() > 1) // C1
-	{
-		std::unique_ptr<std::vector<Point>> tmp = std::unique_ptr<std::vector<Point>>(new std::vector<Point>);
-		Point p = (*currentCurve).back();
-		Point p2 = (*currentCurve).at((*currentCurve).size() - 2);
-		float distPoint = sqrt((p.x - p2.x)*(p.x - p2.x) + (p.y - p2.y)*(p.y - p2.y));
-		float distMouse = sqrt((p.x - x)*(p.x - x) + (p.y - y)*(p.y - y));
-		float coeff = distMouse / distPoint;
-		(*tmp).push_back(Point(p.x, p.y));
-		(*tmp).push_back(Point(p.x + coeff*(p.x - p2.x), p.y + coeff*(p.y - p2.y)));
-		curves.push_back(std::move(currentCurve));
-		currentCurve = std::move(tmp);
-		std::cout << coeff << std::endl;
-	}
-	if (key == 'f' && (*currentCurve).size() > 2) // C2
-	{
-		std::unique_ptr<std::vector<Point>> tmp = std::unique_ptr<std::vector<Point>>(new std::vector<Point>);
-		Point p = (*currentCurve).back();
-		Point p2 = (*currentCurve).at((*currentCurve).size() - 2);
-		Point p3 = (*currentCurve).at((*currentCurve).size() - 3);
-		float distPoint = sqrt((p.x - p2.x)*(p.x - p2.x) + (p.y - p2.y)*(p.y - p2.y));
-		float distMouse = sqrt((p.x - x)*(p.x - x) + (p.y - y)*(p.y - y));
-		float coeff = distMouse / distPoint;
-		Point temp = Point(p2.x + coeff*(p2.x - p3.x), p2.y + coeff*(p2.y - p3.y));
-		Point newP = Point(p.x + coeff*(p.x - p2.x), p.y + coeff*(p.y - p2.y));
-		(*tmp).push_back(Point(p.x, p.y));
-		(*tmp).push_back(Point(newP.x, newP.y));
-		(*tmp).push_back(Point(newP.x + coeff*(newP.x - temp.x), newP.y + coeff*(newP.y - temp.y)));
-		curves.push_back(std::move(currentCurve));
-		currentCurve = std::move(tmp);
-		std::cout << coeff << std::endl;
-	}
-	if (key == 'r' && (*currentCurve).size() > 0) // C0
+	if (step > 1)
+		step--;
+	renderDeCasteljau();
+}
+void higherSteps()
+{
+	step++;
+	renderDeCasteljau();
+}
+
+void c0Continuity()
+{
+	std::unique_ptr<std::vector<Point>> tmp = std::unique_ptr<std::vector<Point>>(new std::vector<Point>);
+	Point p = (*currentCurve).back();
+	(*tmp).push_back(Point(p.x, p.y));
+	curves.push_back(std::move(currentCurve));
+	currentCurve = std::move(tmp);
+	renderDeCasteljau();
+}
+
+void c1Continuity()
+{
+	std::unique_ptr<std::vector<Point>> tmp = std::unique_ptr<std::vector<Point>>(new std::vector<Point>);
+	Point p = (*currentCurve).back();
+	Point p2 = (*currentCurve).at((*currentCurve).size() - 2);
+	(*tmp).push_back(Point(p.x, p.y));
+	(*tmp).push_back(Point(p.x + (p.x - p2.x), p.y + (p.y - p2.y)));
+	curves.push_back(std::move(currentCurve));
+	currentCurve = std::move(tmp);
+	renderDeCasteljau();
+}
+
+void c2Continuity()
+{
+	std::unique_ptr<std::vector<Point>> tmp = std::unique_ptr<std::vector<Point>>(new std::vector<Point>);
+	Point p = (*currentCurve).back();
+	Point p2 = (*currentCurve).at((*currentCurve).size() - 2);
+	Point p3 = (*currentCurve).at((*currentCurve).size() - 3);
+	Point temp = Point(p2.x + (p2.x - p3.x), p2.y + (p2.y - p3.y));
+	Point newP = Point(p.x + (p.x - p2.x), p.y + (p.y - p2.y));
+	(*tmp).push_back(Point(p.x, p.y));
+	(*tmp).push_back(Point(newP.x, newP.y));
+	(*tmp).push_back(Point(newP.x + (newP.x - temp.x), newP.y + (newP.y - temp.y)));
+	curves.push_back(std::move(currentCurve));
+	currentCurve = std::move(tmp);
+	renderDeCasteljau();
+}
+
+void c1ContinuityAsym(int x, int y)
+{
+	std::unique_ptr<std::vector<Point>> tmp = std::unique_ptr<std::vector<Point>>(new std::vector<Point>);
+	Point p = (*currentCurve).back();
+	Point p2 = (*currentCurve).at((*currentCurve).size() - 2);
+	float distPoint = sqrt((p.x - p2.x)*(p.x - p2.x) + (p.y - p2.y)*(p.y - p2.y));
+	float distMouse = sqrt((p.x - x)*(p.x - x) + (p.y - y)*(p.y - y));
+	float coeff = distMouse / distPoint;
+	(*tmp).push_back(Point(p.x, p.y));
+	(*tmp).push_back(Point(p.x + coeff*(p.x - p2.x), p.y + coeff*(p.y - p2.y)));
+	curves.push_back(std::move(currentCurve));
+	currentCurve = std::move(tmp);
+	std::cout << coeff << std::endl;
+	renderDeCasteljau();
+}
+
+void c2ContinuityAsym(int x, int y)
+{
+	std::unique_ptr<std::vector<Point>> tmp = std::unique_ptr<std::vector<Point>>(new std::vector<Point>);
+	Point p = (*currentCurve).back();
+	Point p2 = (*currentCurve).at((*currentCurve).size() - 2);
+	Point p3 = (*currentCurve).at((*currentCurve).size() - 3);
+	float distPoint = sqrt((p.x - p2.x)*(p.x - p2.x) + (p.y - p2.y)*(p.y - p2.y));
+	float distMouse = sqrt((p.x - x)*(p.x - x) + (p.y - y)*(p.y - y));
+	float coeff = distMouse / distPoint;
+	Point temp = Point(p2.x + coeff*(p2.x - p3.x), p2.y + coeff*(p2.y - p3.y));
+	Point newP = Point(p.x + coeff*(p.x - p2.x), p.y + coeff*(p.y - p2.y));
+	(*tmp).push_back(Point(p.x, p.y));
+	(*tmp).push_back(Point(newP.x, newP.y));
+	(*tmp).push_back(Point(newP.x + coeff*(newP.x - temp.x), newP.y + coeff*(newP.y - temp.y)));
+	curves.push_back(std::move(currentCurve));
+	currentCurve = std::move(tmp);
+	std::cout << coeff << std::endl;
+	renderDeCasteljau();
+}
+
+void newCurve()
+{
+	curves.push_back(std::move(currentCurve));
+	currentCurve = std::unique_ptr<std::vector<Point>>(new std::vector<Point>);
+	renderDeCasteljau();
+}
+
+void removeLastPoint()
+{
+	if ((*currentCurve).size() > 0)
 	{
 		(*currentCurve).pop_back();
 	}
 	renderDeCasteljau();
 }
 
+void onKeyPress(unsigned char key, int x, int y)
+{
+	if (key == '+')
+		higherSteps();
+	else if (key == '-')
+		lowerSteps();
+	else if (key == 'x' && (*currentCurve).size() > 0) // C0
+	{
+		c0Continuity();
+	}
+	else if (key == 'c' && (*currentCurve).size() > 1) // C1
+	{
+		c1Continuity();
+	}
+	else if (key == 'v' && (*currentCurve).size() > 2) // C2
+	{
+		c2Continuity();
+	}
+	else if (key == 'd' && (*currentCurve).size() > 1) // C1
+	{
+		c1ContinuityAsym(x, y);
+	}
+	else if (key == 'f' && (*currentCurve).size() > 2) // C2
+	{
+		c2ContinuityAsym(x, y);
+	}
+	else if (key == 'r')
+	{
+		removeLastPoint();
+	}
+	else if (key == 'n')
+	{
+		newCurve();
+	}
+}
+
+
 void renderLite() {}
 
+
+
+void setColor(int index, float* red, float* green, float* blue)
+{
+	switch (index)
+	{
+	case 0:
+		(*red) = 1.0f;
+		(*green) = 0.0f;
+		(*blue) = 0.0f;
+		break;
+	case 1:
+		(*red) = 0.0f;
+		(*green) = 1.0f;
+		(*blue) = 0.0f;
+		break;
+	case 2:
+		(*red) = 0.0f;
+		(*green) = 0.0f;
+		(*blue) = 1.0f;
+		break;
+	case 3:
+		(*red) = 1.0f;
+		(*green) = 1.0f;
+		(*blue) = 0.0f;
+		break;
+	case 4:
+		(*red) = 1.0f;
+		(*green) = 0.0f;
+		(*blue) = 1.0f;
+		break;
+	case 5:
+		(*red) = 0.0f;
+		(*green) = 1.0f;
+		(*blue) = 1.0f;
+		break;
+	case 6:
+		(*red) = 1.0f;
+		(*green) = 1.0f;
+		(*blue) = 1.0f;
+		break;
+	case 7:
+		(*red) = 1.0f;
+		(*green) = 0.5f;
+		(*blue) = 0.0f;
+		break;
+	}
+	renderDeCasteljau();
+}
+
+void mainMenu(int index)
+{
+	switch (index)
+	{
+	case 0:
+		newCurve();
+		break;
+	}
+}
+
+void controlColorMenu(int index)
+{
+	setColor(index, &control_r, &control_g, &control_b);
+}
+void curveColorMenu(int index)
+{
+	setColor(index, &curve_r, &curve_g, &curve_b);
+}
+void currentControlColorMenu(int index)
+{
+	setColor(index, &current_control_r, &current_control_g, &current_control_b);
+}
+void currentCurveColorMenu(int index)
+{
+	setColor(index, &current_curve_r, &current_curve_g, &current_curve_b);
+}
+void clearMenu(int index)
+{
+	switch (index)
+	{
+	case 0:
+		clearWindow();
+		break;
+	case 1:
+		removeLastPoint();
+		break;
+	}
+}
+
+void stepsMenu(int index)
+{
+	switch (index)
+	{
+	case 0:
+		lowerSteps();
+		break;
+	case 1:
+		higherSteps();
+		break;
+	}
+}
+
+void continuityMenu(int index)
+{
+	switch (index)
+	{
+	case 0:
+		c0Continuity();
+		break;
+	case 1:
+		c1Continuity();
+		break;
+	case 2:
+		c2Continuity();
+		break;
+	case 3:
+		c1ContinuityAsym(mouseX, mouseY);
+		break;
+	case 4:
+		std::cout << mouseX << std::endl;
+		std::cout << mouseY << std::endl;
+		c2ContinuityAsym(mouseX, mouseY);
+		break;
+	}
+}
+
+void menuStateChange(int status, int x, int y)
+{
+	if (status == 1)
+	{
+		mouseX = x;
+		mouseY = y;
+	}
+}
+
+
+void createMenu()
+{
+	int menuIndex = glutCreateMenu(mainMenu);
+	//couleur menu
+	int colorSubmenu = glutCreateMenu(nullptr);
+	int controlColorSubmenu = glutCreateMenu(controlColorMenu);
+	glutAddMenuEntry("Rouge", 0);
+	glutAddMenuEntry("Vert", 1);
+	glutAddMenuEntry("Bleu", 2);
+	glutAddMenuEntry("Jaune", 3);
+	glutAddMenuEntry("Violet", 4);
+	glutAddMenuEntry("Cyan", 5);
+	glutAddMenuEntry("Brun", 6);
+	glutAddMenuEntry("Orange", 7);
+	int curveColorSubmenu = glutCreateMenu(curveColorMenu);
+	glutAddMenuEntry("Rouge", 0);
+	glutAddMenuEntry("Vert", 1);
+	glutAddMenuEntry("Bleu", 2);
+	glutAddMenuEntry("Jaune", 3);
+	glutAddMenuEntry("Violet", 4);
+	glutAddMenuEntry("Cyan", 5);
+	glutAddMenuEntry("Brun", 6);
+	glutAddMenuEntry("Orange", 7);
+	int currentControlColorSubmenu = glutCreateMenu(currentControlColorMenu);
+	glutAddMenuEntry("Rouge", 0);
+	glutAddMenuEntry("Vert", 1);
+	glutAddMenuEntry("Bleu", 2);
+	glutAddMenuEntry("Jaune", 3);
+	glutAddMenuEntry("Violet", 4);
+	glutAddMenuEntry("Cyan", 5);
+	glutAddMenuEntry("Brun", 6);
+	glutAddMenuEntry("Orange", 7);
+	int currentCurveColorSubmenu = glutCreateMenu(currentCurveColorMenu);
+	glutAddMenuEntry("Rouge", 0);
+	glutAddMenuEntry("Vert", 1);
+	glutAddMenuEntry("Bleu", 2);
+	glutAddMenuEntry("Jaune", 3);
+	glutAddMenuEntry("Violet", 4);
+	glutAddMenuEntry("Cyan", 5);
+	glutAddMenuEntry("Brun", 6);
+	glutAddMenuEntry("Orange", 7);
+	//clear menu
+	int clearSubMenu = glutCreateMenu(clearMenu);
+	glutAddMenuEntry("Effacer tout", 0);
+	glutAddMenuEntry("Effacer le dernier point", 1);
+	int stepsSubMenu = glutCreateMenu(stepsMenu);
+	glutAddMenuEntry("Diminuer le pas", 0);
+	glutAddMenuEntry("Augmenter le pas", 1);
+	int continuitysSubMenu = glutCreateMenu(continuityMenu);
+	glutAddMenuEntry("C0", 0);
+	glutAddMenuEntry("C1 (r1 == r2)", 1);
+	glutAddMenuEntry("C2 (r1 == r2)", 2);
+	glutAddMenuEntry("C1 (r1 != r2)", 3);
+	glutAddMenuEntry("C2 (r1 != r2)", 4);
+	//menu principal
+	glutSetMenu(colorSubmenu);
+	glutAddSubMenu("Control points", controlColorSubmenu);
+	glutAddSubMenu("Curve points", curveColorSubmenu);
+	glutAddSubMenu("Current control points", currentControlColorSubmenu);
+	glutAddSubMenu("Current curve points", currentCurveColorSubmenu);
+	glutSetMenu(menuIndex);
+	glutAddMenuEntry("Create new curve", 0);
+	glutAddSubMenu("Couleurs", colorSubmenu);
+	glutAddSubMenu("Raccord", continuitysSubMenu);
+	glutAddSubMenu("Pas", stepsSubMenu);
+	glutAddSubMenu("Effacer", clearSubMenu);
+	glutAttachMenu(GLUT_RIGHT_BUTTON);
+	glutMenuStatusFunc(menuStateChange);
+}
 
 int main(int argc, char* argv[])
 {
@@ -255,6 +530,7 @@ int main(int argc, char* argv[])
 	current_control_g = 1.0f;
 	current_curve_r = 1.0f;
 	current_curve_g = 1.0f;
+	createMenu();
 	glutDisplayFunc(renderLite);
 	glutMainLoop();
 	return 0;
