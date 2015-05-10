@@ -9,6 +9,7 @@
 
 // Entete OpenGL 
 #define GLEW_STATIC 1
+#define PI 3.14159265
 #include <GL/glew.h>
 #include "GL/freeglut.h"
 
@@ -23,10 +24,10 @@ double x, y;
 std::unique_ptr<std::vector<Point>> currentCurve;
 std::vector<std::unique_ptr<std::vector<Point>>> curves;
 int step= 50;
-int mouseX = 0;
-int mouseY = 0;
 float current_control_r, current_control_g, current_control_b, control_r, control_g, control_b, curve_r, curve_g, curve_b, current_curve_r, current_curve_g, current_curve_b;
 Point* currentPoint = nullptr;
+int minCurrentX, minCurrentY, mouseX, mouseY;
+float matrix[4];
 
 void getCasteljauPoint(int r, int i, double t, double* x, double* y, std::vector<Point>& points) {
 
@@ -156,6 +157,10 @@ void onClick(int button, int state, int x, int y)
 				currentCurve->push_back(Point(x, y));
 				renderDeCasteljau();
 			}
+			if (minCurrentX == -1 || minCurrentX > x)
+				minCurrentX = x;
+			if (minCurrentY == -1 || minCurrentY > y)
+				minCurrentY = y;
 		}
 		else if (button == 1)
 		{
@@ -259,6 +264,7 @@ void c2ContinuityAsym(int x, int y)
 
 void newCurve()
 {
+	minCurrentX = minCurrentY = -1;
 	curves.push_back(std::move(currentCurve));
 	currentCurve = std::unique_ptr<std::vector<Point>>(new std::vector<Point>);
 	renderDeCasteljau();
@@ -428,6 +434,52 @@ void continuityMenu(int index)
 	}
 }
 
+void applyMatrix(std::vector<Point>& curve)
+{
+	auto point = curve.begin();
+	auto end = curve.end();
+	while (point != end)
+	{
+		int tmpx = (*point).x - minCurrentX;
+		int tmpy = (*point).y - minCurrentY;
+		(*point).x = minCurrentX + tmpx * matrix[0] + tmpy * matrix[1];
+		(*point).y = minCurrentY + tmpx * matrix[2] + tmpy * matrix[3];
+		point++;
+	}
+}
+
+void transformMenu(int index)
+{
+	switch (index)
+	{
+	case 0:
+		int angle;
+		std::cout << "Angle :  " << std::endl;
+		std::cin >> angle;
+		matrix[0] = std::cos(angle  * PI / 180.0);
+		matrix[1] = -std::sin(angle * PI / 180.0);
+		matrix[2] = std::sin(angle * PI / 180.0);
+		matrix[3] = std::cos(angle * PI / 180.0);
+		applyMatrix((*currentCurve));
+		renderDeCasteljau();
+		break;
+	case 1:
+		float scaleX;
+		std::cout << "Scaling X :  " << std::endl;
+		std::cin >> scaleX;
+		float scaleY;
+		std::cout << "Scaling Y :  " << std::endl;
+		std::cin >> scaleY;
+		matrix[0] = scaleX;
+		matrix[1] = 0;
+		matrix[2] = 0;
+		matrix[3] = scaleY;
+		applyMatrix((*currentCurve));
+		renderDeCasteljau();
+		break;
+	}
+}
+
 void menuStateChange(int status, int x, int y)
 {
 	if (status == 1)
@@ -455,6 +507,7 @@ void selectPoint()
 		if (pointNumber >= 0 && pointNumber < (*currentCurve).size())
 		{
 			currentPoint = &(*currentCurve).at(pointNumber);
+			std::cout << "Vous pouvez repositionner le point" << std::endl;
 		}
 		else
 		{
@@ -469,6 +522,7 @@ void selectPoint()
 		if (pointNumber >= 0 && pointNumber < (*curves.at(curveNumber)).size())
 		{
 			currentPoint = &(*curves.at(curveNumber)).at(pointNumber);
+			std::cout << "Vous pouvez repositionner le point" << std::endl;
 		}
 		else
 		{
@@ -538,6 +592,9 @@ void createMenu()
 	int stepsSubMenu = glutCreateMenu(stepsMenu);
 	glutAddMenuEntry("Diminuer le pas", 0);
 	glutAddMenuEntry("Augmenter le pas", 1);
+	int tranformSubMenu = glutCreateMenu(transformMenu);
+	glutAddMenuEntry("Rotation", 0);
+	glutAddMenuEntry("Scaling", 1);
 	int continuitysSubMenu = glutCreateMenu(continuityMenu);
 	glutAddMenuEntry("C0", 0);
 	glutAddMenuEntry("C1 (r1 == r2)", 1);
@@ -553,6 +610,7 @@ void createMenu()
 	glutSetMenu(menuIndex);
 	glutAddMenuEntry("Create new curve", 0);
 	glutAddMenuEntry("Select point", 1);
+	glutAddSubMenu("Transformation", tranformSubMenu);
 	glutAddSubMenu("Couleurs", colorSubmenu);
 	glutAddSubMenu("Raccord", continuitysSubMenu);
 	glutAddSubMenu("Pas", stepsSubMenu);
@@ -563,6 +621,7 @@ void createMenu()
 
 int main(int argc, char* argv[])
 {
+	minCurrentX = minCurrentY = -1;
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_RGBA | GLUT_SINGLE);
 	glutInitWindowSize(1600, 900);
