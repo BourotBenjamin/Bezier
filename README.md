@@ -1,7 +1,8 @@
 # Bezier
 
 Keys
-======================
+====================== 
+Left Click => Menu    
 Right Click => Add a point     
 Middle Click => Delete Everything     
 N => Create a new curve     
@@ -12,5 +13,5 @@ V => Continuity (C2) with r1 == r2
 D => Continuity (C1) with r1 != r2 (Mouse postion used for r2 distance)     
 F => Continuity (C2) with r1 != r2 (Mouse postion used for r2 distance)     
 '+' => Add steps on curves     
-'-' => Remove steps on curves     
-Left Click => Menu
+'-' => Remove steps on curves    
+H => Show / hide control points    
