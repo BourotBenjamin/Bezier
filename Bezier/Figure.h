@@ -27,7 +27,8 @@ int step= 50;
 float current_control_r, current_control_g, current_control_b, control_r, control_g, control_b, curve_r, curve_g, curve_b, current_curve_r, current_curve_g, current_curve_b;
 Point* currentPoint = nullptr;
 int minCurrentX, minCurrentY, mouseX, mouseY;
-float matrix[4];
+float matrix[6];
+bool showControlPoints;
 
 void getCasteljauPoint(int r, int i, double t, double* x, double* y, std::vector<Point>& points) {
 
@@ -107,23 +108,26 @@ void renderDeCasteljau()
 	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT);
 	glLineWidth(1);
-	glColor3f(control_r, control_g, control_b);
-	for each (auto& points in curves)
+	if (showControlPoints)
 	{
+		glColor3f(control_r, control_g, control_b);
+		for each (auto& points in curves)
+		{
+			glBegin(GL_LINE_STRIP);
+			for each (Point p in (*points))
+			{
+				glVertex2i(p.x, p.y);
+			}
+			glEnd();
+		}
+		glColor3f(current_control_r, current_control_g, current_control_b);
 		glBegin(GL_LINE_STRIP);
-		for each (Point p in (*points))
+		for each (Point p in (*currentCurve))
 		{
 			glVertex2i(p.x, p.y);
 		}
 		glEnd();
 	}
-	glColor3f(current_control_r, current_control_g, current_control_b);
-	glBegin(GL_LINE_STRIP);
-	for each (Point p in (*currentCurve))
-	{
-		glVertex2i(p.x, p.y);
-	}
-	glEnd();
 	deCateljau();
 	glutPostRedisplay();
 	glFlush();
@@ -313,6 +317,11 @@ void onKeyPress(unsigned char key, int x, int y)
 	{
 		newCurve();
 	}
+	else if (key == 'h')
+	{
+		showControlPoints = !showControlPoints;
+		renderDeCasteljau();
+	}
 }
 
 
@@ -442,8 +451,8 @@ void applyMatrix(std::vector<Point>& curve)
 	{
 		int tmpx = (*point).x - minCurrentX;
 		int tmpy = (*point).y - minCurrentY;
-		(*point).x = minCurrentX + tmpx * matrix[0] + tmpy * matrix[1];
-		(*point).y = minCurrentY + tmpx * matrix[2] + tmpy * matrix[3];
+		(*point).x = minCurrentX + tmpx * matrix[0] + tmpy * matrix[1] + matrix[2];
+		(*point).y = minCurrentY + tmpx * matrix[3] + tmpy * matrix[4] + matrix[5];
 		point++;
 	}
 }
@@ -458,8 +467,10 @@ void transformMenu(int index)
 		std::cin >> angle;
 		matrix[0] = std::cos(angle  * PI / 180.0);
 		matrix[1] = -std::sin(angle * PI / 180.0);
-		matrix[2] = std::sin(angle * PI / 180.0);
-		matrix[3] = std::cos(angle * PI / 180.0);
+		matrix[2] = 0;
+		matrix[3] = std::sin(angle * PI / 180.0);
+		matrix[4] = std::cos(angle * PI / 180.0);
+		matrix[5] = 0;
 		applyMatrix((*currentCurve));
 		renderDeCasteljau();
 		break;
@@ -473,7 +484,25 @@ void transformMenu(int index)
 		matrix[0] = scaleX;
 		matrix[1] = 0;
 		matrix[2] = 0;
-		matrix[3] = scaleY;
+		matrix[3] = 0;
+		matrix[4] = scaleY;
+		matrix[5] = 0;
+		applyMatrix((*currentCurve));
+		renderDeCasteljau();
+		break;
+	case 2:
+		float transX;
+		std::cout << "Translate X :  " << std::endl;
+		std::cin >> transX;
+		float transY;
+		std::cout << "Translate Y :  " << std::endl;
+		std::cin >> transY;
+		matrix[0] = 1;
+		matrix[1] = 0;
+		matrix[2] = transX;
+		matrix[3] = 0;
+		matrix[4] = 1;
+		matrix[5] = transY;
 		applyMatrix((*currentCurve));
 		renderDeCasteljau();
 		break;
@@ -595,6 +624,7 @@ void createMenu()
 	int tranformSubMenu = glutCreateMenu(transformMenu);
 	glutAddMenuEntry("Rotation", 0);
 	glutAddMenuEntry("Scaling", 1);
+	glutAddMenuEntry("Translation", 2);
 	int continuitysSubMenu = glutCreateMenu(continuityMenu);
 	glutAddMenuEntry("C0", 0);
 	glutAddMenuEntry("C1 (r1 == r2)", 1);
@@ -622,6 +652,7 @@ void createMenu()
 int main(int argc, char* argv[])
 {
 	minCurrentX = minCurrentY = -1;
+	showControlPoints = true;
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_RGBA | GLUT_SINGLE);
 	glutInitWindowSize(1600, 900);
