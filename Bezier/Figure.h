@@ -26,6 +26,8 @@ int step= 50;
 int mouseX = 0;
 int mouseY = 0;
 float current_control_r, current_control_g, current_control_b, control_r, control_g, control_b, curve_r, curve_g, curve_b, current_curve_r, current_curve_g, current_curve_b;
+Point* currentPoint = nullptr;
+
 void getCasteljauPoint(int r, int i, double t, double* x, double* y, std::vector<Point>& points) {
 
 	double x_1, x_2, y_1, y_2;
@@ -142,8 +144,18 @@ void onClick(int button, int state, int x, int y)
 	{
 		if (button == 0)
 		{
-			currentCurve->push_back(Point(x, y));
-			renderDeCasteljau();
+			if (currentPoint != nullptr)
+			{
+				(*currentPoint).x = x;
+				(*currentPoint).y = y;
+				currentPoint = nullptr;
+				renderDeCasteljau();
+			}
+			else
+			{
+				currentCurve->push_back(Point(x, y));
+				renderDeCasteljau();
+			}
 		}
 		else if (button == 1)
 		{
@@ -350,16 +362,6 @@ void setColor(int index, float* red, float* green, float* blue)
 	renderDeCasteljau();
 }
 
-void mainMenu(int index)
-{
-	switch (index)
-	{
-	case 0:
-		newCurve();
-		break;
-	}
-}
-
 void controlColorMenu(int index)
 {
 	setColor(index, &control_r, &control_g, &control_b);
@@ -436,6 +438,58 @@ void menuStateChange(int status, int x, int y)
 }
 
 
+void selectPoint()
+{
+	int curveNumber;
+	std::cout << "Numero de la courbe entre 0 et " << curves.size() << std::endl;
+	std::cin >> curveNumber;
+	if (curveNumber > curves.size())
+	{
+		std::cout << "Valuer invalide" << std::endl;
+	}
+	else if (curveNumber == curves.size())
+	{
+		int pointNumber;
+		std::cout << "Numero de la courbe entre 0 et " << (*currentCurve).size() - 1  << std::endl;
+		std::cin >> pointNumber;
+		if (pointNumber >= 0 && pointNumber < (*currentCurve).size())
+		{
+			currentPoint = &(*currentCurve).at(pointNumber);
+		}
+		else
+		{
+			std::cout << "Valuer invalide" << std::endl;
+		}
+	}
+	else
+	{
+		int pointNumber;
+		std::cout << "Numero de la courbe entre 0 et " << (*curves.at(curveNumber)).size() << std::endl;
+		std::cin >> pointNumber;
+		if (pointNumber >= 0 && pointNumber < (*curves.at(curveNumber)).size())
+		{
+			currentPoint = &(*curves.at(curveNumber)).at(pointNumber);
+		}
+		else
+		{
+			std::cout << "Valuer invalide" << std::endl;
+		}
+	}
+}
+
+void mainMenu(int index)
+{
+	switch (index)
+	{
+	case 0:
+		newCurve();
+		break;
+	case 1:
+		selectPoint();
+		break;
+	}
+}
+
 void createMenu()
 {
 	int menuIndex = glutCreateMenu(mainMenu);
@@ -498,6 +552,7 @@ void createMenu()
 	glutAddSubMenu("Current curve points", currentCurveColorSubmenu);
 	glutSetMenu(menuIndex);
 	glutAddMenuEntry("Create new curve", 0);
+	glutAddMenuEntry("Select point", 1);
 	glutAddSubMenu("Couleurs", colorSubmenu);
 	glutAddSubMenu("Raccord", continuitysSubMenu);
 	glutAddSubMenu("Pas", stepsSubMenu);
