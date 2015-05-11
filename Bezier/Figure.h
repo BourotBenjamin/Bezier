@@ -633,13 +633,13 @@ void createMenu()
 	glutAddMenuEntry("C2 (r1 != r2)", 4);
 	//menu principal
 	glutSetMenu(colorSubmenu);
-	glutAddSubMenu("Control points", controlColorSubmenu);
-	glutAddSubMenu("Curve points", curveColorSubmenu);
-	glutAddSubMenu("Current control points", currentControlColorSubmenu);
-	glutAddSubMenu("Current curve points", currentCurveColorSubmenu);
+	glutAddSubMenu("Points de controle", controlColorSubmenu);
+	glutAddSubMenu("Courbes", curveColorSubmenu);
+	glutAddSubMenu("Points de controle courrants", currentControlColorSubmenu);
+	glutAddSubMenu("Courbe courrante", currentCurveColorSubmenu);
 	glutSetMenu(menuIndex);
-	glutAddMenuEntry("Create new curve", 0);
-	glutAddMenuEntry("Select point", 1);
+	glutAddMenuEntry("Nouvelle courbe", 0);
+	glutAddMenuEntry("Selectionner un point", 1);
 	glutAddSubMenu("Transformation", tranformSubMenu);
 	glutAddSubMenu("Couleurs", colorSubmenu);
 	glutAddSubMenu("Raccord", continuitysSubMenu);
