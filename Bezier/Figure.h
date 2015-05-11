@@ -585,7 +585,7 @@ void createMenu()
 	glutAddMenuEntry("Jaune", 3);
 	glutAddMenuEntry("Violet", 4);
 	glutAddMenuEntry("Cyan", 5);
-	glutAddMenuEntry("Brun", 6);
+	glutAddMenuEntry("Blanc", 6);
 	glutAddMenuEntry("Orange", 7);
 	int curveColorSubmenu = glutCreateMenu(curveColorMenu);
 	glutAddMenuEntry("Rouge", 0);
@@ -594,7 +594,7 @@ void createMenu()
 	glutAddMenuEntry("Jaune", 3);
 	glutAddMenuEntry("Violet", 4);
 	glutAddMenuEntry("Cyan", 5);
-	glutAddMenuEntry("Brun", 6);
+	glutAddMenuEntry("Blanc", 6);
 	glutAddMenuEntry("Orange", 7);
 	int currentControlColorSubmenu = glutCreateMenu(currentControlColorMenu);
 	glutAddMenuEntry("Rouge", 0);
@@ -603,7 +603,7 @@ void createMenu()
 	glutAddMenuEntry("Jaune", 3);
 	glutAddMenuEntry("Violet", 4);
 	glutAddMenuEntry("Cyan", 5);
-	glutAddMenuEntry("Brun", 6);
+	glutAddMenuEntry("Blanc", 6);
 	glutAddMenuEntry("Orange", 7);
 	int currentCurveColorSubmenu = glutCreateMenu(currentCurveColorMenu);
 	glutAddMenuEntry("Rouge", 0);
@@ -612,7 +612,7 @@ void createMenu()
 	glutAddMenuEntry("Jaune", 3);
 	glutAddMenuEntry("Violet", 4);
 	glutAddMenuEntry("Cyan", 5);
-	glutAddMenuEntry("Brun", 6);
+	glutAddMenuEntry("Blanc", 6);
 	glutAddMenuEntry("Orange", 7);
 	//clear menu
 	int clearSubMenu = glutCreateMenu(clearMenu);
