@@ -666,6 +666,7 @@ void createMenu()
 	glutSetMenu(menuIndex);
 	glutAddMenuEntry("Nouvelle courbe", 0);
 	glutAddMenuEntry("Selectionner un point", 1);
+	glutAddMenuEntry("Changer l'espace de parametrage", 2);
 	glutAddSubMenu("Transformation", tranformSubMenu);
 	glutAddSubMenu("Couleurs", colorSubmenu);
 	glutAddSubMenu("Raccord", continuitysSubMenu);
