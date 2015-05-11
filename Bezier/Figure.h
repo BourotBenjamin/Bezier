@@ -23,10 +23,11 @@
 double x, y;
 std::unique_ptr<std::vector<Point>> currentCurve;
 std::vector<std::unique_ptr<std::vector<Point>>> curves;
-int step= 50;
+int step= 50.0;
 float current_control_r, current_control_g, current_control_b, control_r, control_g, control_b, curve_r, curve_g, curve_b, current_curve_r, current_curve_g, current_curve_b;
 Point* currentPoint = nullptr;
 int minCurrentX, minCurrentY, mouseX, mouseY;
+float a, b;
 float matrix[6];
 bool showControlPoints;
 
@@ -79,11 +80,11 @@ void deCateljau()
 		if (psize > 0)
 		{
 			glBegin(GL_LINE_STRIP);
-			for (double t = 0; t <= 1; t += (1.0/step))
+			for (double t = a; t <= b; t += (1.0/step))
 			{
 				getCasteljauPointIter(psize, 0, t, (*points));
 			}
-			glVertex2d((*points).back().x, (*points).back().y);
+			//glVertex2d((*points).back().x, (*points).back().y);
 			glEnd();
 		}
 	}
@@ -92,11 +93,11 @@ void deCateljau()
 	if (psize > 0)
 	{
 		glBegin(GL_LINE_STRIP);
-		for (double t = 0; t <= 1; t += (1.0 / step))
+		for (double t = a; t <= b; t += (1.0 / step))
 		{
 			getCasteljauPointIter(psize, 0, t, (*currentCurve));
 		}
-		glVertex2d((*currentCurve).back().x, (*currentCurve).back().y);
+		//glVertex2d((*currentCurve).back().x, (*currentCurve).back().y);
 		glEnd();
 	}
 }
@@ -174,8 +175,6 @@ void onClick(int button, int state, int x, int y)
 		{
 			mouseX = x;
 			mouseY = y;
-			std::cout << mouseX << std::endl;
-			std::cout << mouseY << std::endl;
 		}
 	}
 }
@@ -242,7 +241,6 @@ void c1ContinuityAsym(int x, int y)
 	(*tmp).push_back(Point(p.x + coeff*(p.x - p2.x), p.y + coeff*(p.y - p2.y)));
 	curves.push_back(std::move(currentCurve));
 	currentCurve = std::move(tmp);
-	std::cout << coeff << std::endl;
 	renderDeCasteljau();
 }
 
@@ -262,7 +260,6 @@ void c2ContinuityAsym(int x, int y)
 	(*tmp).push_back(Point(newP.x + coeff*(newP.x - temp.x), newP.y + coeff*(newP.y - temp.y)));
 	curves.push_back(std::move(currentCurve));
 	currentCurve = std::move(tmp);
-	std::cout << coeff << std::endl;
 	renderDeCasteljau();
 }
 
@@ -436,8 +433,6 @@ void continuityMenu(int index)
 		c1ContinuityAsym(mouseX, mouseY);
 		break;
 	case 4:
-		std::cout << mouseX << std::endl;
-		std::cout << mouseY << std::endl;
 		c2ContinuityAsym(mouseX, mouseY);
 		break;
 	}
@@ -531,7 +526,7 @@ void selectPoint()
 	else if (curveNumber == curves.size())
 	{
 		int pointNumber;
-		std::cout << "Numero de la courbe entre 0 et " << (*currentCurve).size() - 1  << std::endl;
+		std::cout << "Numero de la courbe entre 0 et " << (*currentCurve).size() - 1 << std::endl;
 		std::cin >> pointNumber;
 		if (pointNumber >= 0 && pointNumber < (*currentCurve).size())
 		{
@@ -560,6 +555,34 @@ void selectPoint()
 	}
 }
 
+
+void changeParamSpace()
+{
+	float min;
+	std::cout << "Valeur min (entre 0 et 1)" << std::endl;
+	std::cin >> min;
+	if (min < 0 || min >= 1)
+	{
+		std::cout << "Valuer invalide" << std::endl;
+	}
+	else 
+	{
+		float max;
+		std::cout << "Valeur max (entre "<< min <<" et 1)" << std::endl;
+		std::cin >> max;
+		if (max > min || max <= 1)
+		{
+			a = min;
+			b = max;
+		}
+		else
+		{
+			std::cout << "Valuer invalide" << std::endl;
+		}
+	}
+	renderDeCasteljau();
+}
+
 void mainMenu(int index)
 {
 	switch (index)
@@ -569,6 +592,9 @@ void mainMenu(int index)
 		break;
 	case 1:
 		selectPoint();
+		break;
+	case 2:
+		changeParamSpace();
 		break;
 	}
 }
@@ -675,6 +701,8 @@ int main(int argc, char* argv[])
 	current_control_g = 1.0f;
 	current_curve_r = 1.0f;
 	current_curve_g = 1.0f;
+	a = 0;
+	b = 1;
 	createMenu();
 	glutDisplayFunc(renderLite);
 	glutMainLoop();
