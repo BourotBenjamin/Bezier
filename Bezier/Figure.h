@@ -84,7 +84,8 @@ void deCateljau()
 			{
 				getCasteljauPointIter(psize, 0, t, (*points));
 			}
-			//glVertex2d((*points).back().x, (*points).back().y);
+			if (b==1)
+				glVertex2d((*points).back().x, (*points).back().y);
 			glEnd();
 		}
 	}
@@ -97,7 +98,8 @@ void deCateljau()
 		{
 			getCasteljauPointIter(psize, 0, t, (*currentCurve));
 		}
-		//glVertex2d((*currentCurve).back().x, (*currentCurve).back().y);
+		if (b == 1)
+			glVertex2d((*currentCurve).back().x, (*currentCurve).back().y);
 		glEnd();
 	}
 }
@@ -661,8 +663,8 @@ void createMenu()
 	glutSetMenu(colorSubmenu);
 	glutAddSubMenu("Points de controle", controlColorSubmenu);
 	glutAddSubMenu("Courbes", curveColorSubmenu);
-	glutAddSubMenu("Points de controle courrants", currentControlColorSubmenu);
-	glutAddSubMenu("Courbe courrante", currentCurveColorSubmenu);
+	glutAddSubMenu("Points de controle courants", currentControlColorSubmenu);
+	glutAddSubMenu("Courbe courante", currentCurveColorSubmenu);
 	glutSetMenu(menuIndex);
 	glutAddMenuEntry("Nouvelle courbe", 0);
 	glutAddMenuEntry("Selectionner un point", 1);
