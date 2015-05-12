@@ -76,6 +76,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Figure.cpp" />
     <ClCompile Include="Figure.h" />
     <ClCompile Include="Point.h" />
   </ItemGroup>
